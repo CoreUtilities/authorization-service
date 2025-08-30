@@ -12,6 +12,8 @@ import com.authorization_service.entity.User;
 import com.authorization_service.repository.RefreshTokenRepository;
 import com.authorization_service.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class RefreshTokenService {
 
@@ -26,6 +28,7 @@ public class RefreshTokenService {
         this.userRepo = userRepo;
     }
 
+    @Transactional
     public RefreshToken createRefreshToken(String username) {
         User user = userRepo.findByUsername(username).orElseThrow();
 
@@ -49,6 +52,7 @@ public class RefreshTokenService {
         return refreshTokenRepo.findByToken(token);
     }
 
+    @Transactional
     public void deleteByUserId(Long userId) {
         User user = userRepo.findById(userId).orElseThrow();
         refreshTokenRepo.deleteByUser(user);
