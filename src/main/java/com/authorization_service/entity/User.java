@@ -16,8 +16,17 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
+
+    @Column(unique = true, nullable = true)
+    private String email;
+
+    @Column(nullable = true)
+    private String googleId;
+
+    @Column(nullable = true)
+    private String authProvider; // "local", "google", etc.
 
     private String role = "USER"; // default role
 

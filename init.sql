@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    google_id VARCHAR(255) UNIQUE,
+    auth_provider VARCHAR(50),
+    role VARCHAR(50) DEFAULT 'USER'
+);
+
+CREATE TABLE IF NOT EXISTS refresh_token (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(500) NOT NULL UNIQUE,
+    user_id BIGINT NOT NULL,
+    expiry_date TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
