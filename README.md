@@ -14,6 +14,7 @@ This service implements a modern authentication system using JWT (JSON Web Token
 - **Refresh Tokens**: Maintain user sessions with automatic token rotation
 - **HTTPOnly Cookies**: Protect refresh tokens from XSS attacks using secure HTTPOnly cookies
 - **Password Security**: BCrypt password encoding for secure storage
+- **OAuth2 Integration**: Google OAuth2 authentication support for seamless social login
 - **Spring Security Integration**: Built on Spring Security for robust security features
 
 ## Technology Stack
@@ -47,7 +48,8 @@ src/main/java/com/authorization_service/
 │   └── RefreshTokenRepository.java       # Refresh token data access
 ├── security/
 │   ├── CustomUserDetailsService.java     # Custom user details loading
-│   └── JwtAuthFilter.java                # JWT validation filter
+│   ├── JwtAuthFilter.java                # JWT validation filter
+│   └── OAuth2SuccessHandler.java         # OAuth2 callback handler
 └── service/
     ├── JwtService.java                   # JWT generation and validation
     └── RefreshTokenService.java          # Refresh token management
@@ -104,6 +106,25 @@ Response: 200 OK
 }
 
 Note: Returns new access token and refreshes the httpOnly cookie
+```
+
+### OAuth2 Endpoints
+
+#### Google OAuth2 Login
+```
+GET /oauth2/authorization/google
+
+Redirects user to Google login page. After authentication, redirects to callback handler.
+```
+
+#### OAuth2 Callback (Auto-handled by Spring Security)
+```
+GET /login/oauth2/code/google
+
+This endpoint is automatically handled by Spring Security after Google authentication.
+The OAuth2SuccessHandler processes the callback and redirects to frontend with access token.
+
+Redirect URL: http://localhost:3000/oauth-callback?accessToken=<accessToken>
 ```
 
 ## Setup & Installation
@@ -171,7 +192,20 @@ spring.jpa.hibernate.ddl-auto=update
 
 # Token expiration (7 days in milliseconds)
 app.jwt.refresh-expiration-ms=604800000
+
+# Google OAuth2 Configuration
+spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+spring.security.oauth2.client.registration.google.scope=openid,profile,email
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8080/login/oauth2/code/google
+
+# OAuth2 Provider configuration
+spring.security.oauth2.client.provider.google.user-name-attribute=sub
 ```
+
+### OAuth2 Setup
+
+For detailed Google OAuth2 configuration instructions, see [GOOGLE_OAUTH2_SETUP.md](GOOGLE_OAUTH2_SETUP.md).
 
 ## Security Features
 
@@ -187,7 +221,7 @@ app.jwt.refresh-expiration-ms=604800000
 
 ## Using the Service
 
-### Example: Login Flow
+### Example: Traditional Login Flow
 
 1. **Register a new user**:
 ```bash
@@ -216,6 +250,26 @@ curl -X POST http://localhost:8080/api/auth/refresh-token \
   -b cookies.txt
 ```
 
+### Example: Google OAuth2 Login Flow
+
+1. **Redirect user to Google login**:
+```
+User visits: http://localhost:8080/oauth2/authorization/google
+```
+
+2. **After Google authentication**, user is automatically redirected to your frontend with the access token:
+```
+http://localhost:3000/oauth-callback?accessToken=<accessToken>
+```
+
+3. **Frontend stores the token** and uses it for subsequent requests:
+```bash
+curl http://localhost:8080/api/protected \
+  -H "Authorization: Bearer <accessToken>"
+```
+
+For detailed OAuth2 setup instructions, see [GOOGLE_OAUTH2_SETUP.md](GOOGLE_OAUTH2_SETUP.md).
+
 ## Testing
 
 Run the test suite with:
@@ -227,13 +281,14 @@ Test reports are available in `build/reports/tests/test/index.html`
 
 ## Future Enhancements
 
-- OAuth2/OIDC integration
 - Multi-factor authentication (MFA)
 - Rate limiting for login attempts
 - Audit logging for security events
 - User roles and permissions management
 - API key authentication
 - Token blacklisting for logout functionality
+- Additional OAuth2 providers (GitHub, Microsoft, etc.)
+- Social login account linking
 
 ## License
 
